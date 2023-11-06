@@ -1,11 +1,12 @@
-import { Component } from 'react';
+import { ReactNode } from 'react';
 
 interface Props {
     onClick: () => void;
+    children: ReactNode;
 }
 
-export default class Button extends Component<Props> {
-    render() {
-        return <button onClick={this.props.onClick}>Search</button>;
-    }
-}
+const Button = ({ children, onClick }: Props) => (
+    <button onClick={onClick}>{children}</button>
+);
+
+export default Button;

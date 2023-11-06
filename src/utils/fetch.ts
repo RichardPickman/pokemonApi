@@ -21,7 +21,14 @@ export const fetchCreature = async (
     return response.json();
 };
 
-export const fetchAllCreatures = async (): Promise<AllPokemonsResponse> =>
-    await fetch(`${POKEMON_API}/pokemon?limit=20`, headers).then((res) =>
-        res.json()
+export const fetchAllCreatures = async (limit?: number, offset?: number) => {
+    const params = new URLSearchParams(
+        `limit=${limit || 20}&offset=${offset || 0}`
     );
+
+    const url = `${POKEMON_API}/pokemon?${params}`;
+
+    return (await fetch(url, headers).then((res) =>
+        res.json()
+    )) as Promise<AllPokemonsResponse>;
+};

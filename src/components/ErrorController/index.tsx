@@ -1,25 +1,16 @@
-import { Component } from 'react';
+import { useState } from 'react';
+import Button from '../Button';
 
-interface Props {}
+const ErrorController = () => {
+    const [isError, setError] = useState(false);
 
-interface State {
-    isError: boolean;
-}
-
-export default class ErrorController extends Component<Props, State> {
-    state = {
-        isError: false,
-    };
-
-    invokeError = () => {
-        this.setState(() => ({ isError: true }));
-    };
-
-    render() {
-        if (this.state.isError) {
-            throw new Error('This error is thrown on demand');
-        }
-
-        return <button onClick={this.invokeError}>Invoke error!</button>;
+    if (isError) {
+        throw new Error('This error is thrown on demand');
     }
-}
+
+    const onClick = () => setError(true);
+
+    return <Button onClick={onClick}>Error!</Button>;
+};
+
+export default ErrorController;

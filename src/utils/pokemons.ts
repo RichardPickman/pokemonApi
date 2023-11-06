@@ -7,8 +7,9 @@ const getPokemonInfo = (pokemon: SinglePokemon) => ({
     image: pokemon.sprites.front_default,
 });
 
-const getAllCreatures = async () => {
-    const { results } = await fetchAllCreatures();
+const getAllCreatures = async (limit?: number, offset?: number) => {
+    const { results } = await fetchAllCreatures(limit, offset);
+
     const result = results.map(async (item) => {
         const pokemon = await fetchCreature(item.name);
 
@@ -18,7 +19,11 @@ const getAllCreatures = async () => {
     return Promise.all(result);
 };
 
-export const fetchPokemons = async (text: string) => {
+export const fetchPokemons = async (
+    text: string,
+    limit?: number,
+    offset?: number
+) => {
     if (text) {
         const pokemon = await fetchCreature(text);
 
@@ -28,7 +33,7 @@ export const fetchPokemons = async (text: string) => {
 
         return [getPokemonInfo(pokemon)];
     } else {
-        const pokemons = await getAllCreatures();
+        const pokemons = await getAllCreatures(limit, offset);
 
         return pokemons.filter(Boolean);
     }

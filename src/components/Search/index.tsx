@@ -1,51 +1,58 @@
-import { Component } from 'react';
+import { useState } from 'react';
 import Button from '../Button';
 import Input from '../Input';
 
 interface Props {
+    limit: number;
     onClick: (input: string) => void;
+    onLimitChange: (limit: number) => void;
 }
 
-interface State {
-    query: string;
-}
+const Search = ({ limit, onClick, onLimitChange }: Props) => {
+    const [query, setQuery] = useState('');
 
-export default class Search extends Component<Props, State> {
-    state: State = {
-        query: localStorage.getItem('history') || '',
+    const handleClick = () => {
+        onClick(query);
+        saveToHistory();
     };
 
-    saveToHistory = () => {
-        const query = this.state.query;
+    const saveToHistory = () => localStorage.setItem('history', query);
 
-        localStorage.setItem('history', query);
-    };
+    return (
+        <section
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+            }}
+        >
+            <div
+                style={{
+                    display: 'flex',
+                    width: '100%',
+                    justifyContent: 'center',
+                }}
+            >
+                <Input onChange={setQuery} value={query || ''} />
+                <Button onClick={handleClick}>Search</Button>
+            </div>
+            <div
+                style={{
+                    display: 'flex',
+                    width: '100%',
+                    justifyContent: 'center',
+                }}
+            >
+                <label>Limit: </label>
+                <input
+                    type="number"
+                    value={limit}
+                    onChange={(event) =>
+                        onLimitChange(Number(event.target.value))
+                    }
+                />
+            </div>
+        </section>
+    );
+};
 
-    handleClick = () => {
-        this.props.onClick(this.state.query);
-
-        this.saveToHistory();
-    };
-
-    componentDidMount(): void {
-        if (this.state.query) {
-            this.handleClick();
-        }
-    }
-
-    render() {
-        return (
-            <section className="search">
-                <div>
-                    <Input
-                        onChange={(query) =>
-                            this.setState(() => ({ ...this.state, query }))
-                        }
-                        value={this.state.query || ''}
-                    />
-                    <Button onClick={this.handleClick} />
-                </div>
-            </section>
-        );
-    }
-}
+export default Search;
