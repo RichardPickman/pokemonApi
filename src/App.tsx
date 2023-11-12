@@ -1,35 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useContext } from 'react';
+import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
+import './App.css';
+import ErrorBoundary from './components/Error';
+import ErrorController from './components/ErrorController';
+import { List } from './components/List';
+import { SinglePokemon } from './components/SinglePokemon';
+import { PaginationProvider } from './providers/Pagination';
+import { PokemonProvider, PokemonState, appLoader } from './providers/Pokemons';
+import { fetchPokemons } from './utils/pokemons';
 
-function App() {
-  const [count, setCount] = useState(0)
+const Page = () => {
+    const { currentPokemon } = useContext(PokemonState);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    return (
+        <ErrorBoundary>
+            <main>
+                <ErrorController />
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <List />
+                    {currentPokemon && <Outlet />}
+                </div>
+            </main>
+        </ErrorBoundary>
+    );
+};
 
-export default App
+export const router = createBrowserRouter([
+    {
+        path: '/',
+        element: (
+            <PaginationProvider>
+                <PokemonProvider>
+                    <Page />
+                </PokemonProvider>
+            </PaginationProvider>
+        ),
+        loader: appLoader,
+        children: [
+            {
+                path: '/',
+                element: <SinglePokemon />,
+                loader: async ({ request }) => {
+                    const url = new URL(request.url);
+                    const poke = url.searchParams.get('poke') || '';
+                    const result = await fetchPokemons(poke);
+
+                    if (!result[0]) {
+                        return { item: null };
+                    }
+
+                    return { item: result[0] };
+                },
+            },
+        ],
+    },
+]);
+
+const App = () => {
+    return <RouterProvider router={router} />;
+};
+
+export default App;
