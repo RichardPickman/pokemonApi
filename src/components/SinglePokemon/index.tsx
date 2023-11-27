@@ -1,21 +1,43 @@
-import { useLoaderData } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Pokemon } from '../../types';
+import { fetchPokemons } from '../../utils/pokemons';
+import { useRouter } from 'next/router';
 
-export const SinglePokemon = () => {
-    const { item } = useLoaderData() as { item: Pokemon };
+interface Props {
+    item: string | null;
+}
 
-    if (!item) {
+export const SinglePokemon = ({ item }: Props) => {
+    const [poke, setPoke] = useState<Pokemon | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        const getPokemon = async () => {
+            if (!item) {
+                return;
+            }
+
+            const result = await fetchPokemons(item);
+            const pokemon = result[0] || null;
+
+            setPoke(pokemon);
+        };
+
+        getPokemon();
+    }, [item, router.asPath]);
+
+    if (!poke) {
         return null;
     }
 
     return (
         <div className="pokemon">
             <div className="pokemon__media">
-                <img src={item.image} alt="Pokemon image" />
+                <img src={poke.image} alt="Pokemon image" />
             </div>
             <div className="pokemon__info">
-                <p>{item.name}</p>
-                <p>{item.description}</p>
+                <p>{poke.name}</p>
+                <p>{poke.description}</p>
             </div>
         </div>
     );
