@@ -9,6 +9,13 @@ import { useDispatch } from 'react-redux';
 import { Input } from '@/components/Form/Input';
 import { InputRadio } from '@/components/Form/Radio';
 import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
+import {
+    ACCEPT_TC_ERROR,
+    AGE_ERROR,
+    EMAIL_ERROR,
+    NAME_ERROR,
+    PASSWORD_ERROR,
+} from '@/constants/errors';
 
 const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     <m.p
@@ -22,7 +29,6 @@ const ErrorParagraph = ({ children }: { children: ReactNode }) => (
 
 const Page = () => {
     const formRef = useRef<HTMLFormElement>(null);
-    const gender = useRef<'male' | 'female' | null>(null);
     const dispatch = useDispatch();
     const navigate = useRouter();
     const [errors, setErrors] = useState({
@@ -32,13 +38,13 @@ const Page = () => {
         passwordError: '',
         repeatPasswordError: '',
         fileErrors: '',
+        acceptErrors: '',
     });
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         const outputs = new FormData(formRef.current || undefined);
-
         const data = userDTO(outputs);
 
         const {
@@ -48,17 +54,19 @@ const Page = () => {
             isPasswordValid,
             isPassesValid,
             isFileValid,
+            isAcceptValid,
         } = await validateUser(data);
 
         setErrors({
-            nameError: !isNameValid ? 'Name is not  valid' : '',
-            emailError: !isEmailValid ? 'Email is not  valid' : '',
-            ageError: !isAgeValid ? 'Age is required!' : '',
-            passwordError: !isPasswordValid ? 'Password is not valid' : '',
+            nameError: !isNameValid ? NAME_ERROR : '',
+            emailError: !isEmailValid ? EMAIL_ERROR : '',
+            ageError: !isAgeValid ? AGE_ERROR : '',
+            passwordError: !isPasswordValid ? PASSWORD_ERROR : '',
             repeatPasswordError: !isPassesValid
                 ? 'Password is not the same'
                 : '',
             fileErrors: !isFileValid ? 'File is too large' : '',
+            acceptErrors: !isAcceptValid ? ACCEPT_TC_ERROR : '',
         });
 
         if (
@@ -67,7 +75,8 @@ const Page = () => {
             isAgeValid &&
             isPasswordValid &&
             isPassesValid &&
-            isFileValid
+            isFileValid &&
+            isAcceptValid
         ) {
             dispatch(addUser({ ...data }));
 
@@ -159,7 +168,7 @@ const Page = () => {
                                 </ErrorParagraph>
                             )}
                         </div>
-                        <ColumnWrapper>
+                        <div className="flex flex-col gap-1">
                             <div className="flex gap-2">
                                 <input
                                     id="acceptTC"
@@ -169,7 +178,12 @@ const Page = () => {
                                 />
                                 <label htmlFor="acceptTC">accept T&C</label>
                             </div>
-                        </ColumnWrapper>
+                            {!!errors.acceptErrors && (
+                                <ErrorParagraph>
+                                    {errors.acceptErrors}
+                                </ErrorParagraph>
+                            )}
+                        </div>
                         <button
                             type="submit"
                             className="rounded border bg-slate-800 px-2 py-1 disabled:opacity-80"

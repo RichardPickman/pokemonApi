@@ -4,12 +4,12 @@ import { Input } from '@/components/Form/Input';
 import { InputRadio } from '@/components/Form/Radio';
 import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
 import { addUser } from '@/store/slices/users';
+import { validationSchema } from '@/utils/validate';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useDispatch } from 'react-redux';
-import { bool, mixed, number, object, ref, string } from 'yup';
 
 type FormState = {
     name: string;
@@ -22,46 +22,9 @@ type FormState = {
     acceptTC: NonNullable<boolean | undefined>;
 };
 
-const validationSchema = object({
-    name: string()
-        .required('name is required')
-        .matches(/^[A-Z]/, 'User  should start with uppercase'),
-    email: string().email().required('email is required'),
-    age: number().max(120).positive().required('age is required'),
-    gender: string().required('gender is required').oneOf(['male', 'female']),
-    password: string()
-        .min(6)
-        .max(24)
-        .required()
-        .matches(
-            /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*])/,
-            'Password must contain at least 1 number, 1 uppercase letter, 1 lowercase letter, and 1 special character'
-        ),
-    repeatPassword: string()
-        .required('Repeat password is required')
-        .oneOf([ref('password')], 'Passwords must match!'),
-    picture: mixed<FileList>()
-        .required()
-        .test(
-            'fileSize',
-            'The image size should not be more than 200MB',
-            (files) => !!files[0] && files[0].size <= 200000
-        )
-        .test(
-            'fileType',
-            'Unsupported file type',
-            (files) =>
-                !!files[0] &&
-                ['image/png', 'image/jpeg'].includes(files[0].type)
-        )
-        .required('Image is required'),
-    acceptTC: bool().oneOf([true], 'You must agree to TC').required(),
-});
-
 const Page = () => {
     const dispatch = useDispatch();
     const navigate = useRouter();
-
     const {
         register,
         handleSubmit,
