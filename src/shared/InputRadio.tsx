@@ -1,4 +1,3 @@
-import { m } from 'framer-motion';
 import { InputHTMLAttributes, MutableRefObject, useRef } from 'react';
 
 type Props = InputHTMLAttributes<HTMLInputElement> & {
@@ -16,11 +15,11 @@ export const InputRadio = ({ name, value, id, onClick }: Props) => {
             onClick={onClick}
             className="relative h-8 w-16 cursor-pointer rounded-full"
         >
-            <m.label
+            <label
                 htmlFor={id}
                 className="absolute h-full w-full rounded-full bg-neutral-600 shadow-inner checked:bg-neutral-400"
             />
-            <m.input
+            <input
                 id={id}
                 ref={ref}
                 name={name}
