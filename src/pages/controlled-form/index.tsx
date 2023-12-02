@@ -149,6 +149,7 @@ const Page = () => {
                         <div className="flex gap-2">
                             <input
                                 {...register('acceptTC')}
+                                id="acceptTC"
                                 type="checkbox"
                                 className=" h-6 w-6 rounded border"
                             />
