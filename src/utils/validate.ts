@@ -86,5 +86,5 @@ export const userDTO = (data: FormData) => ({
     password: data.get('password') as string,
     repeatPassword: data.get('repeatPassword') as string,
     picture: data.get('picture') as File,
-    country: data.get('country') as string,
+    country: data.get('country') as (typeof countries)[number],
 });
