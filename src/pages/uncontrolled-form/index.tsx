@@ -1,17 +1,14 @@
 import { ChildrenReveal } from '@/components/ChildrenReveal';
-import { InputRadio } from '@/shared/InputRadio';
 import { addUser } from '@/store/slices/users';
+import { userDTO, validateUser } from '@/utils/validate';
 import { m } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, ReactNode, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { number, string } from 'yup';
-import { ColumnWrapper, InputWrapper } from './wrappers';
-import { userDTO, validateUser } from '@/utils/validate';
-import { Form } from '@/components/Form';
-import { Input } from '@/components/Input';
-import { RadioInput } from '@/components/RadioInput';
+import { Input } from '@/components/Form/Input';
+import { InputRadio } from '@/components/Form/Radio';
+import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
 
 const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     <m.p
@@ -41,6 +38,7 @@ const Page = () => {
         event.preventDefault();
 
         const outputs = new FormData(formRef.current || undefined);
+
         const data = userDTO(outputs);
 
         const {
@@ -58,7 +56,7 @@ const Page = () => {
             ageError: !isAgeValid ? 'Age is required!' : '',
             passwordError: !isPasswordValid ? 'Password is not valid' : '',
             repeatPasswordError: !isPassesValid
-                ? 'Password is should include the '
+                ? 'Password is not the same'
                 : '',
             fileErrors: !isFileValid ? 'File is too large' : '',
         });
@@ -89,61 +87,62 @@ const Page = () => {
                 </div>
                 <form
                     ref={formRef}
-                    className="flex flex-col gap-4"
+                    className="flex max-w-xl flex-col gap-4"
                     onSubmit={handleSubmit}
                 >
                     <div className="flex flex-col gap-4">
                         <ColumnWrapper>
                             <Input
-                                error={errors.nameError}
+                                className="color-white rounded border bg-transparent px-4 py-2 outline-none"
                                 label="Name"
                                 name="name"
+                                error={errors.nameError}
                             />
                             <Input
-                                error={errors.ageError}
+                                className="color-white rounded border bg-transparent px-4 py-2 outline-none"
                                 label="Age"
-                                type="number"
                                 name="age"
+                                type="number"
+                                error={errors.ageError}
                             />
                         </ColumnWrapper>
                         <ColumnWrapper>
                             <Input
-                                error={errors.emailError}
+                                className="color-white rounded border bg-transparent px-4 py-2 outline-none"
                                 label="Email"
                                 name="email"
+                                error={errors.emailError}
                             />
                             <InputWrapper>
                                 <label htmlFor="gender">Gender</label>
                                 <div className="flex justify-around gap-1">
-                                    <RadioInput
-                                        checked={gender.current === 'male'}
+                                    <InputRadio
+                                        className="color-white rounded border bg-transparent px-4 py-2 outline-none"
                                         label="M"
-                                        onClick={() =>
-                                            (gender.current = 'male')
-                                        }
+                                        name="gender"
+                                        value="male"
                                     />
-                                    <RadioInput
-                                        checked={gender.current === 'male'}
-                                        label="M"
-                                        onClick={() =>
-                                            (gender.current = 'female')
-                                        }
+                                    <InputRadio
+                                        className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                                        label="F"
+                                        name="gender"
+                                        value="female"
                                     />
                                 </div>
                             </InputWrapper>
                         </ColumnWrapper>
                         <ColumnWrapper>
                             <Input
-                                error={errors.passwordError}
                                 label="Password"
-                                name="password"
                                 type="password"
+                                name="password"
+                                error={errors.passwordError}
                             />
                             <Input
-                                error={errors.repeatPasswordError}
                                 label="Repeat password"
-                                name="repeatPassword"
                                 type="password"
+                                name="repeatPassword"
+                                error={errors.repeatPasswordError}
                             />
                         </ColumnWrapper>
                         <div className="relative flex w-full flex-col justify-between gap-2">

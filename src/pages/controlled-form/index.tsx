@@ -1,25 +1,84 @@
 import { ChildrenReveal } from '@/components/ChildrenReveal';
 import { ErrorParagraph } from '@/components/ErrorParagraph';
-import { RadioInput } from '@/components/RadioInput';
-import { User } from '@/types';
+import { Input } from '@/components/Form/Input';
+import { InputRadio } from '@/components/Form/Radio';
+import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
+import { addUser } from '@/store/slices/users';
+import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useDispatch, useSelector } from 'react-redux';
-import { ColumnWrapper, InputWrapper } from '../uncontrolled-form/wrappers';
-import { RootState } from '@/store/store';
-import { InputRadio } from '@/shared/InputRadio';
+import { useDispatch } from 'react-redux';
+import { bool, mixed, number, object, ref, string } from 'yup';
 
-const className =
-    'color-white rounded border bg-transparent px-4 py-2 outline-none';
+type FormState = {
+    name: string;
+    email: string;
+    age: number;
+    gender: string;
+    password: string;
+    repeatPassword: string;
+    picture: FileList;
+    acceptTC: NonNullable<boolean | undefined>;
+};
 
-type FormState = User & { picture: FileList | null };
+const validationSchema = object({
+    name: string()
+        .required('name is required')
+        .matches(/^[A-Z]/, 'User  should start with uppercase'),
+    email: string().email().required('email is required'),
+    age: number().max(120).positive().required('age is required'),
+    gender: string().required('gender is required').oneOf(['male', 'female']),
+    password: string()
+        .min(6)
+        .max(24)
+        .required()
+        .matches(
+            /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*])/,
+            'Password must contain at least 1 number, 1 uppercase letter, 1 lowercase letter, and 1 special character'
+        ),
+    repeatPassword: string()
+        .required('Repeat password is required')
+        .oneOf([ref('password')], 'Passwords must match!'),
+    picture: mixed<FileList>()
+        .required()
+        .test(
+            'fileSize',
+            'The image size should not be more than 200MB',
+            (files) => !!files[0] && files[0].size <= 200000
+        )
+        .test(
+            'fileType',
+            'Unsupported file type',
+            (files) =>
+                !!files[0] &&
+                ['image/png', 'image/jpeg'].includes(files[0].type)
+        )
+        .required('Image is required'),
+    acceptTC: bool().oneOf([true], 'You must agree to TC').required(),
+});
 
 const Page = () => {
-    const { register, handleSubmit, formState } = useForm<FormState>();
+    const dispatch = useDispatch();
+    const navigate = useRouter();
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<FormState>({
+        resolver: yupResolver(validationSchema),
+    });
+
+    const isSubmitAvailable = Object.keys(errors).length === 0;
 
     const onSubmit: SubmitHandler<FormState> = (data) => {
-        console.log(data);
+        if (isSubmitAvailable) {
+            const img = data.picture[0];
+            dispatch(addUser({ ...data, picture: img }));
+
+            navigate.push('/');
+        }
     };
 
     return (
@@ -33,140 +92,95 @@ const Page = () => {
                 className="flex flex-col gap-4"
                 onSubmit={handleSubmit(onSubmit)}
             >
-                <div className="flex flex-col gap-4">
+                <div className="flex max-w-2xl flex-col gap-4">
                     <ColumnWrapper>
-                        <InputWrapper>
-                            <label htmlFor="name">Name</label>
-                            <input
-                                className={className}
-                                type="text"
-                                placeholder="John Doe"
-                                {...(register('name'), { required: true })}
-                            />
-                            {!!formState.errors.name && (
-                                <ErrorParagraph>
-                                    {formState.errors.name.message}
-                                </ErrorParagraph>
-                            )}
-                        </InputWrapper>
-                        <InputWrapper>
-                            <label htmlFor="email">Email</label>
-                            <input
-                                className={className}
-                                {...(register('email'), { required: true })}
-                                type="text"
-                                placeholder="johndoe@mail.com"
-                            />
-                            {!!formState.errors.email && (
-                                <ErrorParagraph>
-                                    {formState.errors.email.message}
-                                </ErrorParagraph>
-                            )}
-                        </InputWrapper>
+                        <Input
+                            className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                            label="Name"
+                            {...register('name')}
+                            error={errors.name?.message}
+                        />
+                        <Input
+                            className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                            label="Age"
+                            {...register('age')}
+                            type="number"
+                            error={errors.age?.message}
+                        />
                     </ColumnWrapper>
                     <ColumnWrapper>
-                        <InputWrapper>
-                            <label htmlFor="age">Age</label>
-                            <input
-                                {...(register('age'), { required: true })}
-                                className={className}
-                                type="number"
-                                placeholder=""
-                            />
-                            {!!formState.errors.age && (
-                                <ErrorParagraph>
-                                    {formState.errors.age.message}
-                                </ErrorParagraph>
-                            )}
-                        </InputWrapper>
+                        <Input
+                            className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                            label="Email"
+                            {...register('email')}
+                            error={errors.email?.message}
+                        />
                         <InputWrapper>
                             <label htmlFor="gender">Gender</label>
                             <div className="flex justify-around gap-1">
-                                <div className="flex items-center gap-4">
-                                    <InputRadio
-                                        {...(register('gender'),
-                                        { required: true })}
-                                        name="gender"
-                                        type="radio"
-                                        value="male"
-                                    />
-                                    <label htmlFor="genderMale"></label>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <InputRadio
-                                        {...(register('gender'),
-                                        { required: true })}
-                                        name="gender"
-                                        type="radio"
-                                        value="male"
-                                    />
-                                    <label htmlFor="genderMale"></label>
-                                </div>
+                                <InputRadio
+                                    className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                                    label="M"
+                                    {...register('gender')}
+                                    value="male"
+                                    checked
+                                />
+                                <InputRadio
+                                    className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                                    label="F"
+                                    {...register('gender')}
+                                    value="female"
+                                />
                             </div>
                         </InputWrapper>
                     </ColumnWrapper>
                     <ColumnWrapper>
-                        <InputWrapper>
-                            <label htmlFor="password">Password</label>
-                            <input
-                                {...(register('password'), { min: 6, max: 24 })}
-                                className={className}
-                                type="password"
-                                placeholder=""
-                            />
-                            {!!formState.errors.password && (
-                                <ErrorParagraph>
-                                    {formState.errors.password.message}
-                                </ErrorParagraph>
-                            )}
-                        </InputWrapper>
-                        <InputWrapper>
-                            <label htmlFor="repeatPassword">
-                                Repeat password
-                            </label>
-                            <input
-                                {...register('repeatPassword')}
-                                className={className}
-                                type="password"
-                                placeholder=""
-                            />
-                            {!!formState.errors.repeatPassword && (
-                                <ErrorParagraph>
-                                    {formState.errors.repeatPassword.message}
-                                </ErrorParagraph>
-                            )}
-                        </InputWrapper>
+                        <Input
+                            label="Password"
+                            type="password"
+                            {...register('password')}
+                            error={errors.password?.message}
+                        />
+                        <Input
+                            label="Repeat password"
+                            type="password"
+                            {...register('repeatPassword')}
+                            error={errors.repeatPassword?.message}
+                        />
                     </ColumnWrapper>
                     <div className="relative flex w-full flex-col justify-between gap-2">
                         <div className="relative flex aspect-video w-full items-center justify-center rounded border-2 border-dashed">
                             <input
-                                {...register('picture')}
                                 accept="image/png, image/jpeg"
+                                {...register('picture')}
                                 type="file"
-                                className={[className, 'border-none'].join(' ')}
                             />
                         </div>
-                        {!!formState.errors.picture && (
+                        {!!errors.picture?.message && (
                             <ErrorParagraph>
-                                {formState.errors.picture.message}
+                                {errors.picture?.message}
                             </ErrorParagraph>
                         )}
                     </div>
-                    <ColumnWrapper>
+                    <div className="flex flex-col gap-1">
                         <div className="flex gap-2">
                             <input
                                 {...register('acceptTC')}
-                                className={['h-6 w-6 rounded border'].join(' ')}
-                                id="acceptTC"
                                 type="checkbox"
-                                placeholder=""
+                                className=" h-6 w-6 rounded border"
                             />
                             <label htmlFor="acceptTC">accept T&C</label>
                         </div>
-                    </ColumnWrapper>
+                        {!!errors.acceptTC?.message && (
+                            <ErrorParagraph>
+                                {errors.acceptTC?.message}
+                            </ErrorParagraph>
+                        )}
+                    </div>
                     <button
                         type="submit"
                         className="rounded border bg-slate-800 px-2 py-1 disabled:opacity-80"
+                        disabled={!isSubmitAvailable}
                     >
                         Submit
                     </button>
