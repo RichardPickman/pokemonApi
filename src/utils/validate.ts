@@ -1,10 +1,26 @@
+import {
+    ACCEPT_TC_ERROR,
+    AGE_ERROR,
+    EMAIL_ERROR,
+    NAME_ERROR,
+    PASSWORD_ERROR,
+} from '@/constants/errors';
 import { User } from '@/types';
-import { mixed, number, string, ref } from 'yup';
+import { mixed, number, string, ref, object, bool } from 'yup';
 
-const name = string().uppercase().required();
-const email = string().email().required();
-const age = number().positive().required();
-const password = string().min(8).max(24);
+const name = string()
+    .required('name is required')
+    .matches(/^[A-Z]/, NAME_ERROR);
+const email = string().email().required(EMAIL_ERROR);
+const age = number().max(120).positive().required(AGE_ERROR);
+const password = string()
+    .min(6)
+    .max(24)
+    .required()
+    .matches(
+        /^(?=.*[0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*[!@#$%^&*])/,
+        PASSWORD_ERROR
+    );
 const picture = mixed<File>()
     .test(
         'fileSize',
@@ -18,6 +34,34 @@ const picture = mixed<File>()
     )
     .required('Image is required');
 
+const acceptTC = bool().oneOf([true], ACCEPT_TC_ERROR).required();
+
+export const validationSchema = object({
+    name: name,
+    email: email,
+    age: age,
+    gender: string().required('gender is required').oneOf(['male', 'female']),
+    password: password,
+    repeatPassword: string()
+        .required('Repeat password is required')
+        .oneOf([ref('password')], 'Passwords must match!'),
+    picture: mixed<FileList>()
+        .required()
+        .test(
+            'fileSize',
+            'The image size should not be more than 200MB',
+            (files) => !!files[0] && files[0].size <= 200000
+        )
+        .test(
+            'fileType',
+            'Unsupported file type',
+            (files) =>
+                !!files[0] &&
+                ['image/png', 'image/jpeg'].includes(files[0].type)
+        )
+        .required('Image is required'),
+    acceptTC: acceptTC,
+});
 export const validateUser = async (user: User) => {
     return {
         isNameValid: await name.isValid(user.name),
@@ -26,6 +70,7 @@ export const validateUser = async (user: User) => {
         isPasswordValid: await password.isValid(user.password),
         isPassesValid: user.password === user.repeatPassword,
         isFileValid: await picture.isValid(user.picture),
+        isAcceptValid: await acceptTC.isValid(user.acceptTC),
     };
 };
 
