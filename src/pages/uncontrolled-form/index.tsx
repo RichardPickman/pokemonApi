@@ -1,23 +1,17 @@
 import { ChildrenReveal } from '@/components/ChildrenReveal';
 import { InputRadio } from '@/shared/InputRadio';
-import { setValue } from '@/store/slices/controlled';
-import { RootState } from '@/store/store';
-import { UncontrolledForm } from '@/types';
-import { validateEmail, validatePassword } from '@/utils';
+import { addUser } from '@/store/slices/users';
 import { m } from 'framer-motion';
 import Link from 'next/link';
-import { ChangeEvent, FormEvent, ReactNode, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
-const ColumnWrapper = ({ children }: { children: ReactNode }) => (
-    <div className="grid grid-cols-2 items-start justify-center gap-2">
-        {children}
-    </div>
-);
-
-const InputWrapper = ({ children }: { children: ReactNode }) => (
-    <div className="flex flex-col gap-1">{children}</div>
-);
+import { useRouter } from 'next/navigation';
+import { FormEvent, ReactNode, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { number, string } from 'yup';
+import { ColumnWrapper, InputWrapper } from './wrappers';
+import { userDTO, validateUser } from '@/utils/validate';
+import { Form } from '@/components/Form';
+import { Input } from '@/components/Input';
+import { RadioInput } from '@/components/RadioInput';
 
 const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     <m.p
@@ -29,51 +23,59 @@ const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     </m.p>
 );
 
-const validate = (uncontrolled: RootState['uncontrolled']) => ({
-    isPassValid: validatePassword(uncontrolled.password),
-    isPassesSame: uncontrolled.repeatPassword === uncontrolled.password,
-    isEmailValid: validateEmail(uncontrolled.email),
-});
-
 const Page = () => {
-    const uncontrolled = useSelector((state: RootState) => state.uncontrolled);
+    const formRef = useRef<HTMLFormElement>(null);
+    const gender = useRef<'male' | 'female' | null>(null);
     const dispatch = useDispatch();
+    const navigate = useRouter();
     const [errors, setErrors] = useState({
+        nameError: '',
+        emailError: '',
+        ageError: '',
         passwordError: '',
         repeatPasswordError: '',
-        emailError: '',
+        fileErrors: '',
     });
 
-    const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const { id, value } = event.target;
-        const key = id as keyof UncontrolledForm;
-
-        dispatch(setValue({ key, value }));
-    };
-
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const { isPassValid, isPassesSame, isEmailValid } =
-            validate(uncontrolled);
+        const outputs = new FormData(formRef.current || undefined);
+        const data = userDTO(outputs);
+
+        const {
+            isNameValid,
+            isEmailValid,
+            isAgeValid,
+            isPasswordValid,
+            isPassesValid,
+            isFileValid,
+        } = await validateUser(data);
 
         setErrors({
-            passwordError: !isPassValid ? 'Password is not valid' : '',
-            repeatPasswordError: !isPassesSame
-                ? 'Password is not the same'
-                : '',
+            nameError: !isNameValid ? 'Name is not  valid' : '',
             emailError: !isEmailValid ? 'Email is not  valid' : '',
+            ageError: !isAgeValid ? 'Age is required!' : '',
+            passwordError: !isPasswordValid ? 'Password is not valid' : '',
+            repeatPasswordError: !isPassesValid
+                ? 'Password is should include the '
+                : '',
+            fileErrors: !isFileValid ? 'File is too large' : '',
         });
 
-        if (isPassValid && isPassesSame && isEmailValid) {
-            alert(`Your data: ${JSON.stringify(uncontrolled)}`);
+        if (
+            isNameValid &&
+            isEmailValid &&
+            isAgeValid &&
+            isPasswordValid &&
+            isPassesValid &&
+            isFileValid
+        ) {
+            dispatch(addUser({ ...data }));
+
+            navigate.push('/');
         }
     };
-
-    const handleAccept = () => <div></div>;
-
-    const inputClassName =
-        'color-white rounded border bg-transparent px-4 py-2 outline-none';
 
     return (
         <ChildrenReveal>
@@ -85,175 +87,88 @@ const Page = () => {
                         </button>
                     </Link>
                 </div>
-                <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                <form
+                    ref={formRef}
+                    className="flex flex-col gap-4"
+                    onSubmit={handleSubmit}
+                >
                     <div className="flex flex-col gap-4">
                         <ColumnWrapper>
-                            <InputWrapper>
-                                <label htmlFor="name">Name</label>
-                                <input
-                                    id="name"
-                                    className={inputClassName}
-                                    onChange={handleChange}
-                                    placeholder="John Doe"
-                                    value={uncontrolled.name}
-                                />
-                            </InputWrapper>
-                            <InputWrapper>
-                                <label htmlFor="name">Email</label>
-                                <input
-                                    id="email"
-                                    className={inputClassName}
-                                    onChange={handleChange}
-                                    value={uncontrolled.email}
-                                    placeholder="johndoe@mail.com"
-                                />
-                                {!!errors.emailError && (
-                                    <ErrorParagraph>
-                                        Email is not valid
-                                    </ErrorParagraph>
-                                )}
-                            </InputWrapper>
+                            <Input
+                                error={errors.nameError}
+                                label="Name"
+                                name="name"
+                            />
+                            <Input
+                                error={errors.ageError}
+                                label="Age"
+                                type="number"
+                                name="age"
+                            />
                         </ColumnWrapper>
                         <ColumnWrapper>
+                            <Input
+                                error={errors.emailError}
+                                label="Email"
+                                name="email"
+                            />
                             <InputWrapper>
-                                <label htmlFor="age">Age</label>
-                                <input
-                                    id="age"
-                                    type="number"
-                                    className={inputClassName}
-                                    onChange={handleChange}
-                                    value={uncontrolled.age}
-                                />
-                            </InputWrapper>
-                            <InputWrapper>
-                                <label>Gender</label>
+                                <label htmlFor="gender">Gender</label>
                                 <div className="flex justify-around gap-1">
-                                    <div className="flex items-center gap-4">
-                                        <InputRadio
-                                            isChecked={
-                                                uncontrolled.gender === 'male'
-                                            }
-                                            onClick={() =>
-                                                dispatch(
-                                                    setValue({
-                                                        key: 'gender',
-                                                        value: 'male',
-                                                    })
-                                                )
-                                            }
-                                        />
-                                        <label htmlFor="genderMale">M</label>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <InputRadio
-                                            isChecked={
-                                                uncontrolled.gender === 'female'
-                                            }
-                                            onClick={() =>
-                                                dispatch(
-                                                    setValue({
-                                                        key: 'gender',
-                                                        value: 'female',
-                                                    })
-                                                )
-                                            }
-                                        />
-                                        <label htmlFor="genderFemale">F</label>
-                                    </div>
-                                </div>
-                                <div></div>
-                            </InputWrapper>
-                        </ColumnWrapper>
-                        <ColumnWrapper>
-                            <InputWrapper>
-                                <label htmlFor="password">Password</label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    className={inputClassName}
-                                    onChange={handleChange}
-                                    value={uncontrolled.password}
-                                />
-                                {!!errors.passwordError && (
-                                    <ErrorParagraph>
-                                        Password is not valid
-                                    </ErrorParagraph>
-                                )}
-                            </InputWrapper>
-                            <InputWrapper>
-                                <label htmlFor="repeatPassword">
-                                    Repeat password
-                                </label>
-                                <input
-                                    id="repeatPassword"
-                                    className={inputClassName}
-                                    onChange={handleChange}
-                                    type="password"
-                                />
-                                {!!errors.repeatPasswordError && (
-                                    <ErrorParagraph>
-                                        Password is not the same
-                                    </ErrorParagraph>
-                                )}
-                            </InputWrapper>
-                        </ColumnWrapper>
-                        <div className="relative flex w-full justify-between">
-                            {uncontrolled.picture ? (
-                                <div className="relative h-full w-full">
-                                    <p>{uncontrolled.picture.name}</p>
-                                    <div
-                                        className="z-3 absolute right-2 top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded border bg-slate-600"
+                                    <RadioInput
+                                        checked={gender.current === 'male'}
+                                        label="M"
                                         onClick={() =>
-                                            dispatch(
-                                                setValue({
-                                                    key: 'picture',
-                                                    value: null,
-                                                })
-                                            )
-                                        }
-                                    >
-                                        X
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="relative flex aspect-video w-full items-center justify-center rounded border-2 border-dashed">
-                                    <input
-                                        id="picture"
-                                        type="file"
-                                        className="absolute h-full w-full opacity-0"
-                                        onChange={(event) =>
-                                            dispatch(
-                                                setValue({
-                                                    key: 'picture',
-                                                    value: event.target.files
-                                                        ? event.target.files[0]
-                                                        : null,
-                                                })
-                                            )
+                                            (gender.current = 'male')
                                         }
                                     />
-                                    <p>Click me!</p>
+                                    <RadioInput
+                                        checked={gender.current === 'male'}
+                                        label="M"
+                                        onClick={() =>
+                                            (gender.current = 'female')
+                                        }
+                                    />
                                 </div>
+                            </InputWrapper>
+                        </ColumnWrapper>
+                        <ColumnWrapper>
+                            <Input
+                                error={errors.passwordError}
+                                label="Password"
+                                name="password"
+                                type="password"
+                            />
+                            <Input
+                                error={errors.repeatPasswordError}
+                                label="Repeat password"
+                                name="repeatPassword"
+                                type="password"
+                            />
+                        </ColumnWrapper>
+                        <div className="relative flex w-full flex-col justify-between gap-2">
+                            <div className="relative flex aspect-video w-full items-center justify-center rounded border-2 border-dashed">
+                                <input
+                                    accept="image/png, image/jpeg"
+                                    name="picture"
+                                    type="file"
+                                />
+                            </div>
+                            {!!errors.fileErrors && (
+                                <ErrorParagraph>
+                                    {errors.fileErrors}
+                                </ErrorParagraph>
                             )}
                         </div>
                         <ColumnWrapper>
                             <div className="flex gap-2">
                                 <input
-                                    id="accept"
+                                    id="acceptTC"
+                                    name="acceptTC"
                                     type="checkbox"
-                                    className="relative h-6 w-6 appearance-none rounded border bg-neutral-700"
-                                    onChange={handleChange}
-                                    checked={uncontrolled.accept}
+                                    className=" h-6 w-6 rounded border"
                                 />
-                                {uncontrolled.accept && (
-                                    <div className="absolute h-5 w-5">x</div>
-                                )}
-                                <label htmlFor="accept">accept T&C</label>
-                                {!!errors.passwordError && (
-                                    <ErrorParagraph>
-                                        Password is not valid
-                                    </ErrorParagraph>
-                                )}
+                                <label htmlFor="acceptTC">accept T&C</label>
                             </div>
                         </ColumnWrapper>
                         <button
