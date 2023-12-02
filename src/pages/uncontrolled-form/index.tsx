@@ -1,35 +1,42 @@
 import { ChildrenReveal } from '@/components/ChildrenReveal';
+import { InputRadio } from '@/shared/InputRadio';
 import { setValue } from '@/store/slices/controlled';
 import { RootState } from '@/store/store';
 import { UncontrolledForm } from '@/types';
 import { validateEmail, validatePassword } from '@/utils';
 import { m } from 'framer-motion';
-import { ChangeEvent, FormEvent, ReactNode, useState } from 'react';
+import Link from 'next/link';
+import { ChangeEvent, FormEvent, ReactNode, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 const ColumnWrapper = ({ children }: { children: ReactNode }) => (
-    <div className="grid grid-cols-2 items-center justify-center gap-2">
+    <div className="grid grid-cols-2 items-start justify-center gap-2">
         {children}
     </div>
 );
 
 const InputWrapper = ({ children }: { children: ReactNode }) => (
-    <div className="grid grid-rows-3 flex-col gap-1">{children}</div>
+    <div className="flex flex-col gap-1">{children}</div>
 );
 
 const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     <m.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-red-600"
+        className="text-xs text-red-600"
     >
         {children}
     </m.p>
 );
 
+const validate = (uncontrolled: RootState['uncontrolled']) => ({
+    isPassValid: validatePassword(uncontrolled.password),
+    isPassesSame: uncontrolled.repeatPassword === uncontrolled.password,
+    isEmailValid: validateEmail(uncontrolled.email),
+});
+
 const Page = () => {
     const uncontrolled = useSelector((state: RootState) => state.uncontrolled);
-
     const dispatch = useDispatch();
     const [errors, setErrors] = useState({
         passwordError: '',
@@ -38,8 +45,8 @@ const Page = () => {
     });
 
     const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const key = event.target.id as keyof UncontrolledForm;
-        const value = event.target.value;
+        const { id, value } = event.target;
+        const key = id as keyof UncontrolledForm;
 
         dispatch(setValue({ key, value }));
     };
@@ -47,10 +54,8 @@ const Page = () => {
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const isPassValid = validatePassword(uncontrolled.password);
-        const isPassesSame =
-            uncontrolled.repeatPassword === uncontrolled.password;
-        const isEmailValid = validateEmail(uncontrolled.email);
+        const { isPassValid, isPassesSame, isEmailValid } =
+            validate(uncontrolled);
 
         setErrors({
             passwordError: !isPassValid ? 'Password is not valid' : '',
@@ -65,14 +70,23 @@ const Page = () => {
         }
     };
 
+    const handleAccept = () => <div></div>;
+
     const inputClassName =
         'color-white rounded border bg-transparent px-4 py-2 outline-none';
 
     return (
         <ChildrenReveal>
-            <div className="flex h-screen w-screen items-center justify-center">
+            <div className="flex h-auto w-screen flex-col items-center justify-center">
+                <div className="mb-6 flex w-full max-w-2xl items-start justify-start p-4">
+                    <Link href={'/'}>
+                        <button className="border-b px-4 py-2 text-xl">
+                            Home
+                        </button>
+                    </Link>
+                </div>
                 <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-                    <div className="flex flex-col">
+                    <div className="flex flex-col gap-4">
                         <ColumnWrapper>
                             <InputWrapper>
                                 <label htmlFor="name">Name</label>
@@ -112,17 +126,14 @@ const Page = () => {
                                 />
                             </InputWrapper>
                             <InputWrapper>
-                                <label htmlFor="gender">Gender</label>
-                                <div
-                                    id="gender"
-                                    className="flex justify-between gap-1"
-                                >
-                                    <div className="flex gap-4">
-                                        <input
-                                            id="genderMale"
-                                            className="w-4"
-                                            type="radio"
-                                            onChange={() =>
+                                <label>Gender</label>
+                                <div className="flex justify-around gap-1">
+                                    <div className="flex items-center gap-4">
+                                        <InputRadio
+                                            isChecked={
+                                                uncontrolled.gender === 'male'
+                                            }
+                                            onClick={() =>
                                                 dispatch(
                                                     setValue({
                                                         key: 'gender',
@@ -130,18 +141,15 @@ const Page = () => {
                                                     })
                                                 )
                                             }
-                                            checked={
-                                                uncontrolled.gender === 'male'
-                                            }
                                         />
-                                        <label htmlFor="genderMale">Male</label>
+                                        <label htmlFor="genderMale">M</label>
                                     </div>
-                                    <div className="flex gap-4">
-                                        <input
-                                            id="genderFemale"
-                                            className="w-4"
-                                            type="radio"
-                                            onChange={() =>
+                                    <div className="flex items-center gap-4">
+                                        <InputRadio
+                                            isChecked={
+                                                uncontrolled.gender === 'female'
+                                            }
+                                            onClick={() =>
                                                 dispatch(
                                                     setValue({
                                                         key: 'gender',
@@ -149,13 +157,8 @@ const Page = () => {
                                                     })
                                                 )
                                             }
-                                            checked={
-                                                uncontrolled.gender === 'female'
-                                            }
                                         />
-                                        <label htmlFor="genderFemale">
-                                            Female
-                                        </label>
+                                        <label htmlFor="genderFemale">F</label>
                                     </div>
                                 </div>
                                 <div></div>
@@ -233,9 +236,29 @@ const Page = () => {
                                 </div>
                             )}
                         </div>
+                        <ColumnWrapper>
+                            <div className="flex gap-2">
+                                <input
+                                    id="accept"
+                                    type="checkbox"
+                                    className="relative h-6 w-6 appearance-none rounded border bg-neutral-700"
+                                    onChange={handleChange}
+                                    checked={uncontrolled.accept}
+                                />
+                                {uncontrolled.accept && (
+                                    <div className="absolute h-5 w-5">x</div>
+                                )}
+                                <label htmlFor="accept">accept T&C</label>
+                                {!!errors.passwordError && (
+                                    <ErrorParagraph>
+                                        Password is not valid
+                                    </ErrorParagraph>
+                                )}
+                            </div>
+                        </ColumnWrapper>
                         <button
                             type="submit"
-                            className="mt-12 rounded border bg-slate-800 px-2 py-1 disabled:opacity-80"
+                            className="rounded border bg-slate-800 px-2 py-1 disabled:opacity-80"
                         >
                             Submit
                         </button>
