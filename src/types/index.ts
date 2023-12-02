@@ -1,11 +1,10 @@
-export interface UncontrolledForm {
+export interface User {
     name: string;
     age: string;
     email: string;
     password: string;
     repeatPassword: string;
     gender: 'male' | 'female' | null;
-    accept: boolean;
+    acceptTC: boolean;
     picture: File | null;
-    country: string;
 }

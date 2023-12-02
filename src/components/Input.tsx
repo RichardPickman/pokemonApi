@@ -1,6 +1,6 @@
-import { InputWrapper } from '@/pages/uncontrolled-form/wrappers';
 import { InputHTMLAttributes } from 'react';
 import { ErrorParagraph } from './ErrorParagraph';
+import { InputWrapper } from './Wrappers';
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & {
     label: string;
