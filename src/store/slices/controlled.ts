@@ -1,16 +1,15 @@
-import { UncontrolledForm } from '@/types';
+import { User } from '@/types';
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialState: UncontrolledForm = {
+const initialState: User = {
     name: '',
     age: '',
     email: '',
     password: '',
     repeatPassword: '',
     gender: null,
-    accept: false,
+    acceptTC: false,
     picture: null,
-    country: '',
 };
 
 const formSlice = createSlice({
@@ -19,7 +18,7 @@ const formSlice = createSlice({
     reducers: {
         setValue: (
             state,
-            action: { payload: { key: keyof UncontrolledForm; value: unknown } }
+            action: { payload: { key: keyof User; value: unknown } }
         ) => {
             const key = action.payload.key;
             const value = action.payload.value;
