@@ -3,13 +3,15 @@ import { ErrorParagraph } from '@/components/ErrorParagraph';
 import { Input } from '@/components/Form/Input';
 import { InputRadio } from '@/components/Form/Radio';
 import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
+import { countries } from '@/constants/countries';
 import { addUser } from '@/store/slices/users';
+import { RootState } from '@/store/store';
 import { validationSchema } from '@/utils/validate';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 type FormState = {
     name: string;
@@ -20,9 +22,11 @@ type FormState = {
     repeatPassword: string;
     picture: FileList;
     acceptTC: NonNullable<boolean | undefined>;
+    country: (typeof countries)[number];
 };
 
 const Page = () => {
+    const countries = useSelector((state: RootState) => state.countries);
     const dispatch = useDispatch();
     const navigate = useRouter();
     const {
@@ -122,6 +126,22 @@ const Page = () => {
                         {!!errors.picture?.message && (
                             <ErrorParagraph>
                                 {errors.picture?.message}
+                            </ErrorParagraph>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <select
+                            {...register('country')}
+                            className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                        >
+                            {countries.map((item) => (
+                                <option key={item}>{item}</option>
+                            ))}
+                        </select>
+                        {!!errors.country?.message && (
+                            <ErrorParagraph>
+                                {errors.country?.message}
                             </ErrorParagraph>
                         )}
                     </div>

@@ -63,6 +63,9 @@ export default function Home() {
                                         <div className="flex items-start justify-end">
                                             <p id="gender">{item.gender}</p>
                                         </div>
+                                        <div className="flex items-start justify-end">
+                                            <p id="gender">{item.country}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

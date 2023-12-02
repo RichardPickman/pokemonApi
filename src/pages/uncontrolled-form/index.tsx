@@ -5,7 +5,7 @@ import { m } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, ReactNode, useRef, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Input } from '@/components/Form/Input';
 import { InputRadio } from '@/components/Form/Radio';
 import { ColumnWrapper, InputWrapper } from '@/components/Wrappers';
@@ -16,6 +16,7 @@ import {
     NAME_ERROR,
     PASSWORD_ERROR,
 } from '@/constants/errors';
+import { RootState } from '@/store/store';
 
 const ErrorParagraph = ({ children }: { children: ReactNode }) => (
     <m.p
@@ -28,6 +29,7 @@ const ErrorParagraph = ({ children }: { children: ReactNode }) => (
 );
 
 const Page = () => {
+    const countries = useSelector((state: RootState) => state.countries);
     const formRef = useRef<HTMLFormElement>(null);
     const dispatch = useDispatch();
     const navigate = useRouter();
@@ -167,6 +169,17 @@ const Page = () => {
                                     {errors.fileErrors}
                                 </ErrorParagraph>
                             )}
+                        </div>
+
+                        <div className="flex flex-col gap-1">
+                            <select
+                                name="country"
+                                className="color-white rounded border bg-transparent px-4 py-2 outline-none"
+                            >
+                                {countries.map((item) => (
+                                    <option key={item}>{item}</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="flex flex-col gap-1">
                             <div className="flex gap-2">

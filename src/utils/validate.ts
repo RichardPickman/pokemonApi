@@ -1,3 +1,4 @@
+import { countries } from '@/constants/countries';
 import {
     ACCEPT_TC_ERROR,
     AGE_ERROR,
@@ -35,6 +36,7 @@ const picture = mixed<File>()
     .required('Image is required');
 
 const acceptTC = bool().oneOf([true], ACCEPT_TC_ERROR).required();
+const country = string().oneOf(countries).default('None');
 
 export const validationSchema = object({
     name: name,
@@ -61,6 +63,7 @@ export const validationSchema = object({
         )
         .required('Image is required'),
     acceptTC: acceptTC,
+    country: country,
 });
 export const validateUser = async (user: User) => {
     return {
@@ -83,4 +86,5 @@ export const userDTO = (data: FormData) => ({
     password: data.get('password') as string,
     repeatPassword: data.get('repeatPassword') as string,
     picture: data.get('picture') as File,
+    country: data.get('country') as string,
 });

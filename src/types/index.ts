@@ -1,3 +1,5 @@
+import { countries } from '@/constants/countries';
+
 export interface User {
     name: string;
     age: number;
@@ -7,4 +9,5 @@ export interface User {
     gender: 'male' | 'female' | null;
     acceptTC: boolean;
     picture: File | null;
+    country: (typeof countries)[number];
 }
