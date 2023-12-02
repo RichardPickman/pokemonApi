@@ -6,7 +6,7 @@ const Page = () => {
     const uncontrolled = useSelector((state: RootState) => state.uncontrolled);
     const dispatch = useDispatch();
 
-    const onSubmit = (event) => {};
+    const onSubmit = () => {};
 
     return (
         <ChildrenReveal>
