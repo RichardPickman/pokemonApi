@@ -18,7 +18,7 @@ export const ChildrenReveal = ({ children }: { children: ReactNode }) => {
                 exit={{
                     opacity: 0,
                 }}
-                className={`flex min-h-screen flex-col items-center justify-between`}
+                className={`flex flex-col items-center justify-between`}
             >
                 {children}
             </m.div>
