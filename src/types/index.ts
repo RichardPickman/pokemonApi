@@ -1,5 +1,11 @@
-export interface Pokemon {
+export interface UncontrolledForm {
     name: string;
-    description: string;
-    image: string;
+    age: string;
+    email: string;
+    password: string;
+    repeatPassword: string;
+    gender: 'male' | 'female' | null;
+    accept: boolean;
+    picture: File | null;
+    country: string;
 }
